@@ -18,8 +18,9 @@
 - **instrument_prices** - исторические цены инструментов
 
 Все таблицы связаны через внешние ключи с соответствующими ограничениями целостности.
+[Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/DDL.sql)
 
-## 2. Заполнение схемы данными
+## Задание 6. Заполнение схемы данными
 
 База данных заполнена тестовыми данными с соблюдением требований:
 
@@ -37,6 +38,8 @@
 
 ### Таблица версионных данных:
 - **instrument_prices** - 25 записей (история изменения цен)
+
+[Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/DML.sql)
 
 # Задание 7. 
 
@@ -152,3 +155,4 @@ GROUP BY u.user_id, v.verification_status
 ORDER BY total_investments DESC LIMIT 10;
 ```
 **Описание:** Показывает топ-10 пользователей по объему инвестиций с учетом их верификационного статуса и наличных средств.
+[Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/Test.sql)
