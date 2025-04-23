@@ -154,5 +154,99 @@ FROM users u
 GROUP BY u.user_id, v.verification_status
 ORDER BY total_investments DESC LIMIT 10;
 ```
-**Описание:** Показывает топ-10 пользователей по объему инвестиций с учетом их верификационного статуса и наличных средств.
 [Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/Test.sql)
+
+**Описание:** Показывает топ-10 пользователей по объему инвестиций с учетом их верификационного статуса и наличных средств.
+
+# Дополнительные этапы проекта
+
+## Задание 1. Создание представлений (не менее двух)
+
+```sql
+CREATE MATERIALIZED VIEW verifications_expiring_soon AS
+SELECT
+    u.user_id,
+    u.first_name,
+    u.last_name,
+    u.email,
+    v.passport_number,
+    v.expiry_date,
+    v.verification_status
+FROM users u
+JOIN verifications v ON u.user_id = v.user_id
+WHERE
+    v.expiry_date IS NOT NULL
+    AND v.expiry_date <= CURRENT_DATE + INTERVAL '14 days'
+    AND v.verification_status = 'APPROVED';
+```
+Статическое представление: verifications_expiring_soon \
+Цель: Предупреждать, кого надо в ближайшее время попросить обновить документы. \
+Срок действия паспорта/верификации — не меняется каждый час. \
+Вполне достаточно обновлять вью раз в день, например, ночью, чтобы заранее уведомить пользователей.
+
+```sql
+CREATE VIEW wallet_balances_by_user AS
+SELECT
+    u.user_id,
+    u.first_name,
+    u.last_name,
+    w.wallet_id,
+    w.wallet_name,
+    w.currency,
+    w.balance
+FROM users u
+JOIN wallets w ON u.user_id = w.user_id;
+```
+Цель: получить текущий баланс всех кошельков пользователя.
+
+```sql
+CREATE VIEW current_instrument_prices AS
+SELECT
+    i.instrument_id,
+    i.instrument_name,
+    ip.price,
+    ip.valid_from
+FROM instruments i
+JOIN instrument_prices ip ON i.instrument_id = ip.instrument_id
+WHERE ip.is_current = TRUE;
+```
+Цель: показать текущие (актуальные) цены инструментов.
+
+```sql
+CREATE VIEW portfolio_value_by_wallet AS
+SELECT
+    wi.wallet_id,
+    w.wallet_name,
+    w.currency,
+    SUM(wi.quantity * ip.price) AS portfolio_value
+FROM wallet_instruments wi
+JOIN wallets w ON wi.wallet_id = w.wallet_id
+JOIN instrument_prices ip ON wi.instrument_id = ip.instrument_id AND ip.is_current = TRUE
+GROUP BY wi.wallet_id, w.wallet_name, w.currency;
+```
+Цель: рассчитать стоимость портфеля в каждом кошельке, исходя из текущих цен.\
+Готовый файл
+## Задание 2. Создание индексов для технических таблиц
+
+1. Индексы для таблицы transactions
+```sql
+CREATE INDEX idx_transactions_wallet_date
+ON transactions (wallet_id, transaction_date DESC);
+
+CREATE INDEX idx_transactions_status
+ON transactions (status);
+```
+```wallet_id``` + ```transaction_date``` часто используются в аналитике, истории транзакций.\
+```status``` позволяет быстро фильтровать по PENDING, SUCCESS, FAILED и т.п.
+
+2. Индексы для таблицы instrument_prices
+```sql
+CREATE INDEX idx_instrument_prices_current
+ON instrument_prices (instrument_id)
+WHERE is_current = TRUE;
+
+CREATE INDEX idx_instrument_prices_valid_range
+ON instrument_prices (valid_from, valid_to);
+```
+По ```is_current = TRUE``` строится множество представлений (например, portfolio_value_by_wallet).\
+По временным интервалам ```valid_from, valid_to``` строятся графики и ретроспективные аналитики.
