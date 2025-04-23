@@ -37,8 +37,7 @@
 - **transactions** - 30 записей
 
 ### Таблица версионных данных:
-- **instrument_prices** - 25 записей (история изменения цен)
-
+- **instrument_prices** - 25 записей (история изменения цен)\
 [Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/DML.sql)
 
 # Задание 7. 
@@ -225,7 +224,7 @@ JOIN instrument_prices ip ON wi.instrument_id = ip.instrument_id AND ip.is_curre
 GROUP BY wi.wallet_id, w.wallet_name, w.currency;
 ```
 Цель: рассчитать стоимость портфеля в каждом кошельке, исходя из текущих цен.\
-Готовый файл
+[Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/views.sql)
 ## Задание 2. Создание индексов для технических таблиц
 
 1. Индексы для таблицы transactions
@@ -249,4 +248,5 @@ CREATE INDEX idx_instrument_prices_valid_range
 ON instrument_prices (valid_from, valid_to);
 ```
 По ```is_current = TRUE``` строится множество представлений (например, portfolio_value_by_wallet).\
-По временным интервалам ```valid_from, valid_to``` строятся графики и ретроспективные аналитики.
+По временным интервалам ```valid_from, valid_to``` строятся графики и ретроспективные аналитики.\
+[Готовый файл](https://github.com/Quirence/DatabasesMIPT/blob/master/indexes.sql)
